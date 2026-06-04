@@ -1,3 +1,6 @@
+# LIVE DEMO URL
+https://insightdesk-frontend-xi.vercel.app
+
 # InsightDesk Frontend Client 💻
 
 A high-performance, modern single-page application dashboard built with **React**, **Vite**, and **TypeScript**. Styled entirely using the **Tailwind CSS v4** native CSS-first engine, this application delivers a responsive user interface featuring secure routing, dynamic markdown conversation rendering, and fluid document upload interactions.
