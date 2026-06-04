@@ -13,7 +13,7 @@ export const chatService = {
     const response = await fetch(`${API_BASE_URL}/chat/history`, {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json', 
         'Authorization': `Bearer ${token}` 
       }
     });
