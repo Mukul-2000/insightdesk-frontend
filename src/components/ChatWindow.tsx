@@ -312,9 +312,14 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ userId }) => {
             ]);
         } catch (err: any) {
             setError(err.message || 'File ingestion failed.');
-        } fileInputRef.current.value = ''; // Clean input
+        } finally {
+            // ✨ This block executes regardless of success or failure to reset state smoothly
+            setIsUploading(false);
+            if (fileInputRef.current) {
+                fileInputRef.current.value = ''; // Safely reset input value only if element is mounted
+            }
+        }
     };
-
     const handleSend = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!input.trim() || isLoading) return;
