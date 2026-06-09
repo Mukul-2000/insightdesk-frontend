@@ -2,6 +2,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { AuthScreen } from './components/AuthScreen';
 import { ChatWindow } from './components/ChatWindow';
 import { LogOut } from 'lucide-react';
+import { GoogleOAuthProvider } from '@react-oauth/google'; // ➕ Import Google Wrapper
 
 function Dashboard() {
   const { user, logout } = useAuth();
@@ -38,10 +39,15 @@ function MainAppContent() {
 }
 
 function App() {
+  // Pull the Client ID key safely from your local or production .env parameters
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+
   return (
-    <AuthProvider>
-      <MainAppContent />
-    </AuthProvider>
+    <GoogleOAuthProvider clientId={googleClientId}>
+      <AuthProvider>
+        <MainAppContent />
+      </AuthProvider>
+    </GoogleOAuthProvider>
   );
 }
 
