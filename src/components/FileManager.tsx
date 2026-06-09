@@ -14,13 +14,15 @@ export const FileManager: React.FC = () => {
   const [deletingKey, setDeletingKey] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string>('');
 
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+
   // Fetch unique files list on layout mount
   const fetchFiles = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token'); // Retrieve your active JWT session token
-      
-      const response = await fetch('http://localhost:5000/api/v1/documents/files', {
+      const response = await fetch(`${API_BASE_URL}/documents/files`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -55,7 +57,7 @@ export const FileManager: React.FC = () => {
       setDeletingKey(s3Key);
       const token = localStorage.getItem('token');
 
-      const response = await fetch('http://localhost:5000/api/v1/documents/files', {
+      const response = await fetch(`${API_BASE_URL}/documents/files`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

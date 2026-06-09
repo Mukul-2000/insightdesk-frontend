@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Lock, Mail, User as UserIcon, Loader2 } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google'; // ➕ Import standard Google Sign-In button
 
 export const AuthScreen: React.FC = () => {
   const { login, register } = useAuth();
@@ -12,6 +13,8 @@ export const AuthScreen: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,6 +29,40 @@ export const AuthScreen: React.FC = () => {
       }
     } catch (err: any) {
       setError(err.message || 'Something went wrong. Please check your credentials.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // ➕ Google Identity Success Token Handshake Callback
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    setError(null);
+    setSubmitting(true);
+
+    try {
+      const googleToken = credentialResponse.credential;
+
+      // Send the token straight to your newly configured backend auth route
+      const response = await fetch(`${API_BASE_URL}/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: googleToken })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Cache the signed application JWT and profile attributes cleanly 
+        localStorage.setItem('token', result.token);
+        localStorage.setItem('user', JSON.stringify(result.user));
+        
+        // Force quick context evaluation reset matching your token parsing checks on boot
+        window.location.reload();
+      } else {
+        setError(result.message || 'Google authorization handshake was rejected.');
+      }
+    } catch (err) {
+      setError('Connection failure reaching verification infrastructure routes.');
     } finally {
       setSubmitting(false);
     }
@@ -123,6 +160,24 @@ export const AuthScreen: React.FC = () => {
             )}
           </button>
         </form>
+
+        {/* ➕ Premium Minimal Social OAuth Choice Divider Block */}
+        <div className="relative flex py-2 items-center text-zinc-300">
+          <div className="flex-grow border-t border-zinc-200"></div>
+          <span className="flex-shrink mx-4 text-[10px] font-bold text-zinc-400 tracking-widest uppercase mono">Or continue with</span>
+          <div className="flex-grow border-t border-zinc-200"></div>
+        </div>
+
+        {/* ➕ Integrated Secure Google Identity Button Wrapper */}
+        <div className="w-full flex justify-center pb-2">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => setError('Google popup sequence tracking closed or verification rejected.')}
+            theme="outline"
+            shape="circle"
+            width="100%"
+          />
+        </div>
 
         {/* Footer Toggle */}
         <div className="text-center pt-2">
