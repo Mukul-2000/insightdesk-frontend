@@ -15,7 +15,7 @@ export const AuthScreen: React.FC = () => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
 
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1';
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +38,7 @@ export const AuthScreen: React.FC = () => {
         const result = await response.json();
         
         if (result.success) {
-          setSuccessMsg('Recovery link dispatched! Check your Brevo connected inbox.');
+          setSuccessMsg('Recovery link dispatched! Check your inbox.');
           setEmail('');
         } else {
           setError(result.message || 'Failed to dispatch password recovery link.');
