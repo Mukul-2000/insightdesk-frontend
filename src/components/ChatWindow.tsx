@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Bot, User, Loader2, Paperclip, FolderClosed, X } from 'lucide-react'; // ➕ Added FolderClosed & X icons
+import { Send, Bot, User, Loader2, Paperclip, FolderClosed, X } from 'lucide-react'; 
 import { chatService } from '../services/api';
-import { FileManager } from './FileManager'; // ➕ Import your newly created FileManager component
+import { FileManager } from './FileManager'; 
 import type { Message } from '../types/chat';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -16,7 +16,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ userId }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [showFiles, setShowFiles] = useState(false); // ➕ State to toggle the FileManager view
+    const [showFiles, setShowFiles] = useState(false); 
 
     const messagesEndRef = useRef<HTMLDivElement | null>(null);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -46,41 +46,53 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ userId }) => {
     }, [userId]);
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
 
         setIsUploading(true);
         setError(null);
 
-        const formData = new FormData();
-        formData.append('file', file);
+        const token = localStorage.getItem('token');
+        const selectedFiles = Array.from(files);
 
         try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`${API_BASE_URL}/documents/ingest`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` },
-                body: formData,
-            });
+            // Fires separate concurrent API requests for optimal processing segregation
+            await Promise.all(
+                selectedFiles.map(async (file) => {
+                    const formData = new FormData();
+                    formData.append('file', file); 
 
-            if (!response.ok) {
-                throw new Error('Failed to completely parse and vectorize document file.');
-            }
+                    const response = await fetch(`${API_BASE_URL}/documents/ingest`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}` },
+                        body: formData,
+                    });
 
-            setMessages((prev) => [
-                ...prev,
-                { userId, role: 'model', content: `Success! 🎉 System has fully vectorized and indexed your document: "${file.name}". You can now start querying against its data content dynamically.` }
-            ]);
+                    if (!response.ok) {
+                        throw new Error(`Failed to parse and vectorize: "${file.name}"`);
+                    }
+
+                    setMessages((prev) => [
+                        ...prev,
+                        { 
+                            userId, 
+                            role: 'model', 
+                            content: `Success! 🎉 System has fully vectorized and indexed your document: "${file.name}". You can now start querying against its data content dynamically.` 
+                        }
+                    ]);
+                })
+            );
         } catch (err: any) {
-            setError(err.message || 'File ingestion failed.');
+            console.error(err);
+            setError(err.message || 'One or more file ingestions failed to process.');
         } finally {
-            // ✨ This block executes regardless of success or failure to reset state smoothly
             setIsUploading(false);
             if (fileInputRef.current) {
-                fileInputRef.current.value = ''; // Safely reset input value only if element is mounted
+                fileInputRef.current.value = ''; 
             }
         }
     };
+
     const handleSend = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!input.trim() || isLoading) return;
@@ -121,7 +133,6 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ userId }) => {
                     </div>
                 </div>
 
-                {/* ➕ Manage Files Trigger Button in the Header */}
                 <button
                     type="button"
                     onClick={() => setShowFiles(!showFiles)}
@@ -132,10 +143,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ userId }) => {
                 </button>
             </div>
 
-            {/* ➕ SLIDING OVERLAY CONTAINER FOR FILE MANAGER */}
+            {/* SLIDING OVERLAY CONTAINER FOR FILE MANAGER */}
             {showFiles && (
                 <div className="absolute inset-0 bg-white z-30 flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-200">
-                    {/* File Manager Inner Sub-Header */}
                     <div className="px-6 py-4 border-b border-zinc-100 bg-zinc-50/50 flex justify-between items-center">
                         <div className="flex items-center gap-2 text-zinc-800 font-bold text-sm">
                             <FolderClosed size={16} className="text-blue-600" />
@@ -148,7 +158,6 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ userId }) => {
                             <X size={18} />
                         </button>
                     </div>
-                    {/* Scrollable container displaying the File Manager component view */}
                     <div className="flex-1 overflow-y-auto p-4">
                         <FileManager />
                     </div>
@@ -167,7 +176,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ userId }) => {
                     <div className="h-full flex flex-col items-center justify-center text-center p-6 text-zinc-400 space-y-2">
                         <Bot size={40} className="stroke-1 text-zinc-300" />
                         <p className="text-sm">No conversation history found.</p>
-                        <p className="text-xs max-w-xs">Attach a document using the paperclip or send a message to begin.</p>
+                        <p className="text-xs max-w-xs">Attach documents using the paperclip or send a message to begin.</p>
                     </div>
                 )}
 
@@ -206,7 +215,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ userId }) => {
                             <Loader2 size={16} />
                         </div>
                         <div className="bg-blue-50/50 text-blue-700 border border-blue-100 text-xs px-4 py-2.5 rounded-2xl rounded-tl-none shadow-xs font-medium italic">
-                            Parsing file chunks, extracting structural data text, and processing deep embedding weights...
+                            Uploading and processing file array contents into vector index maps concurrently...
                         </div>
                     </div>
                 )}
@@ -230,7 +239,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ userId }) => {
                     type="file"
                     ref={fileInputRef}
                     onChange={handleFileUpload}
-                    accept=".pdf,.txt,.docx"
+                    accept=".pdf,.txt,.docx,.csv,.md,.png,.jpg,.jpeg"
+                    multiple
                     className="hidden"
                 />
 
@@ -239,7 +249,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ userId }) => {
                     disabled={isUploading || isLoading}
                     onClick={() => fileInputRef.current?.click()}
                     className="p-2.5 bg-zinc-100 text-zinc-600 rounded-xl hover:bg-zinc-200 transition-colors disabled:opacity-50 cursor-pointer"
-                    title="Upload knowledge document (PDF, TXT)"
+                    title="Upload knowledge sources (PDF, DOCX, CSV, MD, TXT, PNG, JPG)"
                 >
                     <Paperclip size={18} />
                 </button>
