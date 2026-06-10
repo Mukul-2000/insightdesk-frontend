@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Lock, Mail, User as UserIcon, Loader2, ArrowLeft } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google'; // ➕ Re-imported Google Login Button
 
 export const AuthScreen: React.FC = () => {
   const { login, register } = useAuth();
@@ -45,6 +46,39 @@ export const AuthScreen: React.FC = () => {
       }
     } catch (err: any) {
       setError(err.message || 'Something went wrong. Please check your inputs.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // ➕ Google Identity Token Handshake Callback Re-added
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    setError(null);
+    setSuccessMsg(null);
+    setSubmitting(true);
+
+    try {
+      const googleToken = credentialResponse.credential;
+
+      const response = await fetch(`${API_BASE_URL}/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: googleToken })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        localStorage.setItem('token', result.token);
+        localStorage.setItem('user', JSON.stringify(result.user));
+        
+        // Reload page to let AuthContext capture the newly cached token safely
+        window.location.reload();
+      } else {
+        setError(result.message || 'Google authorization handshake was rejected.');
+      }
+    } catch (err) {
+      setError('Connection failure reaching verification infrastructure routes.');
     } finally {
       setSubmitting(false);
     }
@@ -112,6 +146,27 @@ export const AuthScreen: React.FC = () => {
             {submitting ? <><Loader2 size={16} className="animate-spin" /> Processing...</> : authMode === 'login' ? 'Sign In' : authMode === 'register' ? 'Create Account' : 'Send Recovery Email'}
           </button>
         </form>
+
+        {/* ➕ Re-added Premium Visual Divider & Google Sign-In Button Block */}
+        {authMode !== 'forgot' && (
+          <>
+            <div className="relative flex py-2 items-center text-zinc-300">
+              <div className="flex-grow border-t border-zinc-200"></div>
+              <span className="flex-shrink mx-4 text-[10px] font-bold text-zinc-400 tracking-widest uppercase font-mono">Or continue with</span>
+              <div className="flex-grow border-t border-zinc-200"></div>
+            </div>
+
+            <div className="w-full flex justify-center pb-2">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => setError('Google popup sequence tracking closed or verification rejected.')}
+                theme="outline"
+                shape="circle"
+                width="100%"
+              />
+            </div>
+          </>
+        )}
 
         {/* Footer Navigation Switches */}
         <div className="text-center pt-2">
