@@ -15,6 +15,8 @@ interface CampaignData {
 }
 
 export const StudioWorkspace = () => {
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; 
+
     const [file, setFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
     const [currentStep, setCurrentStep] = useState<AgentUpdate>({ agent: null, status: '' });
@@ -51,7 +53,7 @@ export const StudioWorkspace = () => {
         }
 
         try {
-            const response = await axios.post('http://localhost:5000/api/v1/studio/repurpose', formData, {
+            const response = await axios.post(API_BASE_URL+'/api/v1/studio/repurpose', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             
