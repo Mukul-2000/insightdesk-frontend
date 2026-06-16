@@ -2,7 +2,7 @@
 
 > Production-grade React/TypeScript frontend for the InsightDesk AI productivity workspace.
 
-🌐 **Live App:** [Vercel](https://vercel.com](https://insightdesk-frontend-xi.vercel.app))  
+🌐 **Live App:** [Vercel](https://insightdesk-frontend-xi.vercel.app) 
 **Backend Repo:** [InsightDesk Backend](https://github.com/Mukul-2000/insightdesk-backend)
 
 ---
