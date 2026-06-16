@@ -53,7 +53,7 @@ export const StudioWorkspace = () => {
         }
 
         try {
-            const response = await axios.post(API_BASE_URL+'/api/v1/studio/repurpose', formData, {
+            const response = await axios.post(API_BASE_URL+'/studio/repurpose', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             
