@@ -40,18 +40,17 @@ export const StudioWorkspace = () => {
 
     const handleUploadAndProcess = async () => {
         if (!file) return;
-
+    
         setLoading(true);
         setResult(null);
         setCurrentStep({ agent: 'Analyst', status: 'Uploading media asset...' });
-
+    
         const formData = new FormData();
         formData.append('media', file);
         
-        if (socket.id) {
-            formData.append('socketId', socket.id);
-        }
-
+        // Check if socket is connected, fallback to empty string if not ready yet
+        formData.append('socketId', socket.id || '');
+    
         try {
             const response = await axios.post(API_BASE_URL+'/studio/repurpose', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
@@ -59,6 +58,10 @@ export const StudioWorkspace = () => {
             
             if (response.data.success) {
                 setResult(response.data.data);
+                
+                // ⚡ FIX: Force-terminate loading states when HTTP explicitly confirms success
+                setLoading(false);
+                setCurrentStep({ agent: 'Complete', status: 'Campaign generation complete.' });
             }
         } catch (error) {
             console.error("Pipeline processing failed:", error);
